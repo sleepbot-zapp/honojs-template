@@ -1,0 +1,19 @@
+# Node/Bun dependencies
+node_modules/
+bun.lockb
+
+# Logs
+logs/
+*.log
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# OS metadata
+.DS_Store
+Thumbs.db
