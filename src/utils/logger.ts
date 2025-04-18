@@ -4,6 +4,7 @@ import path from 'path'
 const logDir = path.resolve(process.cwd(), 'logs')
 const serverLogFile = path.join(logDir, 'server.log')
 const dbLogFile = path.join(logDir, 'db.log')
+const userLogFile = path.join(logDir, 'user.log')  // User log file
 
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir)
@@ -62,5 +63,23 @@ export const Logger = {
     const formatted = formatLog('db:read', msg)
     console.log(formatted)
     writeToFile(dbLogFile, formatted)
-  }
+  },
+
+  userInfo: (msg: string) => {
+    const formatted = formatLog('user:info', msg)
+    console.log(formatted)
+    writeToFile(userLogFile, formatted)
+  },
+
+  userWarn: (msg: string) => {
+    const formatted = formatLog('user:warn', msg)
+    console.warn(formatted)
+    writeToFile(userLogFile, formatted)
+  },
+
+  userError: (msg: string) => {
+    const formatted = formatLog('user:error', msg)
+    console.error(formatted)
+    writeToFile(userLogFile, formatted)
+  },
 }

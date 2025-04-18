@@ -20,7 +20,7 @@ authRoutes.post('/register', async (c) => {
   const parsed = loginSchema.safeParse(body)
 
   if (!parsed.success) {
-    Logger.warn('Register failed: Invalid input schema')
+    Logger.userWarn('Register failed: Invalid input schema')
     return c.json(errorResponse(400, 'Invalid input'), 400)
   }
 
@@ -29,7 +29,7 @@ authRoutes.post('/register', async (c) => {
   const existingUser = await prisma.user.findUnique({ where: { username } })
 
   if (existingUser) {
-    Logger.warn(`Register failed: Username "${username}" already exists`)
+    Logger.userWarn(`Register failed: Username "${username}" already exists`)
     return c.json(errorResponse(409, 'Username already exists'), 409)
   }
 
@@ -46,25 +46,26 @@ authRoutes.post('/register', async (c) => {
     expiresIn: '1h',
   })
 
-  Logger.info(`New user registered: ${username} (ID: ${user.id})`)
-  Logger.dbWrite(`User created in database: ${JSON.stringify(user)}`)
+  // User-specific log for registration
+  Logger.userInfo(`User registered: ${username} (ID: ${user.id})`)
 
   return c.json(successResponse({ token }, 201, 'User registered successfully'), 201)
 })
-
 
 authRoutes.post('/login', async (c) => {
   const body = await c.req.json()
   const parsed = loginSchema.safeParse(body)
 
   if (!parsed.success) {
-    return c.json(errorResponse(400, 'Invalid request'), 400)
+    Logger.userWarn('Login failed: Invalid input schema')
+    return c.json(errorResponse(400, 'Invalid input'), 400)
   }
 
   const { username, password } = parsed.data
   const user = await prisma.user.findUnique({ where: { username } })
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
+    Logger.userError(`Login failed for user: ${username} (Invalid credentials)`)
     return c.json(errorResponse(401, 'Invalid credentials'), 401)
   }
 
@@ -72,19 +73,26 @@ authRoutes.post('/login', async (c) => {
 
   c.header('Set-Cookie', `session_id=${sessionId}; HttpOnly; Path=/; Max-Age=86400`)
 
-  return c.json(successResponse(null, 200, 'Logged out successfully'))
+  // User-specific log for successful login
+  Logger.userInfo(`User logged in: ${username} (ID: ${user.id})`)
+
+  return c.json(successResponse({ token: sessionId }, 200, 'Logged in successfully'), 200)
 })
 
 authRoutes.post('/logout', async (c) => {
   const session = getSessionFromRequest(c.req.raw)
 
   if (!session) {
+    Logger.userWarn('Logout failed: No active session found')
     return c.json(errorResponse(401, 'No active session'), 401)
   }
 
   deleteSession(session.sessionId)
 
   c.header('Set-Cookie', `session_id=; HttpOnly; Path=/; Max-Age=0`)
+
+  // User-specific log for successful logout
+  Logger.userInfo(`User logged out: ${session.username} (ID: ${session.userId})`)
 
   return c.json(successResponse(null, 200, 'Logged out successfully'), 200)
 })
@@ -93,8 +101,12 @@ authRoutes.get('/session', async (c) => {
   const session = getSessionFromRequest(c.req.raw)
 
   if (!session) {
+    Logger.userWarn('Session check failed: Session not found')
     return c.json(errorResponse(401, 'Session not found'), 401)
   }
+
+  // User-specific log for session activity
+  Logger.userInfo(`Session found for user: ${session.username} (ID: ${session.userId})`)
 
   return c.json(successResponse({ user: session }, 200, 'Session active'), 200)
 })
