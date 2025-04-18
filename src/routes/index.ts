@@ -13,7 +13,7 @@ export function registerRoutes(app: Hono) {
   const bypassRoutes = ['/register', '/login']
 
   app.use('*', async (c, next) => {
-    if (bypassRoutes.some(route => c.req.url.endsWith(route))) {
+    if (bypassRoutes.some((route) => c.req.url.endsWith(route))) {
       return next()
     }
 
@@ -25,4 +25,3 @@ export function registerRoutes(app: Hono) {
     return next()
   })
 }
-
