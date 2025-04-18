@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt'
 import { prisma } from '@/db/prisma'
 import { successResponse, errorResponse } from '@/utils/response'
 import { Logger } from '@/utils/logger'
+import { createSession, deleteSession, getSessionFromRequest } from '@/utils/session'
 
 const loginSchema = z.object({
   username: z.string().min(3),
@@ -51,37 +52,49 @@ authRoutes.post('/register', async (c) => {
   return c.json(successResponse({ token }, 201, 'User registered successfully'), 201)
 })
 
+
 authRoutes.post('/login', async (c) => {
   const body = await c.req.json()
   const parsed = loginSchema.safeParse(body)
 
   if (!parsed.success) {
-    Logger.warn('Login failed: Invalid request schema')
     return c.json(errorResponse(400, 'Invalid request'), 400)
   }
 
   const { username, password } = parsed.data
-
   const user = await prisma.user.findUnique({ where: { username } })
 
-  if (!user) {
-    Logger.warn(`Login failed: User "${username}" not found`)
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return c.json(errorResponse(401, 'Invalid credentials'), 401)
   }
 
-  const isValid = await bcrypt.compare(password, user.password)
+  const sessionId = createSession({ userId: user.id, username: user.username })
 
-  if (!isValid) {
-    Logger.warn(`Login failed: Incorrect password for "${username}"`)
-    return c.json(errorResponse(401, 'Invalid credentials'), 401)
+  c.header('Set-Cookie', `session_id=${sessionId}; HttpOnly; Path=/; Max-Age=86400`)
+
+  return c.json(successResponse(null, 200, 'Logged out successfully'))
+})
+
+authRoutes.post('/logout', async (c) => {
+  const session = getSessionFromRequest(c.req.raw)
+
+  if (!session) {
+    return c.json(errorResponse(401, 'No active session'), 401)
   }
 
-  const token = jwt.sign({ sub: user.id, username: user.username }, env.JWT_SECRET, {
-    expiresIn: '1h',
-  })
+  deleteSession(session.sessionId)
 
-  Logger.info(`User logged in: ${username} (ID: ${user.id})`)
-  Logger.dbRead(`User fetched from DB: ${username}`)
+  c.header('Set-Cookie', `session_id=; HttpOnly; Path=/; Max-Age=0`)
 
-  return c.json(successResponse({ token }, 200, 'Login successful'), 200)
+  return c.json(successResponse(null, 200, 'Logged out successfully'), 200)
+})
+
+authRoutes.get('/session', async (c) => {
+  const session = getSessionFromRequest(c.req.raw)
+
+  if (!session) {
+    return c.json(errorResponse(401, 'Session not found'), 401)
+  }
+
+  return c.json(successResponse({ user: session }, 200, 'Session active'), 200)
 })

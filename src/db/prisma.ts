@@ -11,15 +11,15 @@ export const prisma =
     log: ['query', 'error', 'warn'],
   })
 
-prisma.$on('query', (e: { query: any; params: any; duration: any }) => {
+prisma.$on('query' as never, (e: { query: any; params: any; duration: any }) => {
   Logger.dbWrite(`Prisma Query: ${e.query} | Params: ${JSON.stringify(e.params)} | Duration: ${e.duration}ms`)
 })
 
-prisma.$on('error', (e: { message: string }) => {
+prisma.$on('error' as never, (e: { message: string }) => {
   Logger.db('Prisma Error: ' + e.message)
 })
 
-prisma.$on('warn', (e: { message: string }) => {
+prisma.$on('warn' as never, (e: { message: string }) => {
   Logger.db('Prisma Warn: ' + e.message)
 })
 

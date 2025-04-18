@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
-import { prisma } from './prisma'
-import { errorResponse } from '../utils/response'
-import { Logger } from '../utils/logger'
+import { prisma } from '@/db/prisma'
+import { errorResponse } from '@/utils/response'
+import { Logger } from '@/utils/logger'
 
 export class ModelHandler<T extends keyof PrismaClient> {
   protected model: any
