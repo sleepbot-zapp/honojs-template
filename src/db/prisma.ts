@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { Logger } from '../utils/logger'
+import { Logger } from '@/utils/logger'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -12,7 +12,9 @@ export const prisma =
   })
 
 prisma.$on('query' as never, (e: { query: any; params: any; duration: any }) => {
-  Logger.dbWrite(`Prisma Query: ${e.query} | Params: ${JSON.stringify(e.params)} | Duration: ${e.duration}ms`)
+  Logger.dbWrite(
+    `Prisma Query: ${e.query} | Params: ${JSON.stringify(e.params)} | Duration: ${e.duration}ms`
+  )
 })
 
 prisma.$on('error' as never, (e: { message: string }) => {

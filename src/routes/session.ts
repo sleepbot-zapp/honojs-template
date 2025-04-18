@@ -6,9 +6,14 @@ type SessionData = {
   createdAt: number
 }
 
-export const getSessionFromRequest = (req: Request): (SessionData & { sessionId: string }) | null => {
+export const getSessionFromRequest = (
+  req: Request
+): (SessionData & { sessionId: string }) | null => {
   const cookie = req.headers.get('cookie')
-  const sessionId = cookie?.split('; ').find((c) => c.startsWith('session_id='))?.split('=')[1]
+  const sessionId = cookie
+    ?.split('; ')
+    .find((c) => c.startsWith('session_id='))
+    ?.split('=')[1]
   if (!sessionId) return null
 
   const session = getSession(sessionId)
@@ -16,7 +21,6 @@ export const getSessionFromRequest = (req: Request): (SessionData & { sessionId:
 
   return { ...session, sessionId }
 }
-
 
 const sessions = new Map<string, SessionData>()
 

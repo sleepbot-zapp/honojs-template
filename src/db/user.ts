@@ -7,13 +7,13 @@ export class UserHandler extends ModelHandler<'user'> {
 
   async findByUsername(username: string) {
     return this.findUnique({
-      where: { username }
+      where: { username },
     })
   }
 
   async createUser(username: string, passwordHash: string) {
     return this.create({
-      data: { username, passwordHash }
+      data: { username, passwordHash },
     })
   }
 }

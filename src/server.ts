@@ -1,18 +1,17 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import routes from '@/routes/hello'
-import { authRoutes } from '@/routes/auth'
-import { env } from "@/env"
+import { registerRoutes } from '@/routes'
+import { env } from '@/env'
 import { errorResponse } from '@/utils/response'
 import { Logger } from '@/utils/logger'
-
+import { cors } from 'hono/cors'
 
 const app = new Hono()
 
-app.use(logger())
+registerRoutes(app)
 
-app.route('/api', routes)
-app.route('/auth', authRoutes)
+app.use(logger())
+app.use('*', cors())
 
 app.notFound((c) => {
   const message = `404 - ${c.req.method} ${c.req.url}`

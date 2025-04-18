@@ -4,7 +4,7 @@ import path from 'path'
 const logDir = path.resolve(process.cwd(), 'logs')
 const serverLogFile = path.join(logDir, 'server.log')
 const dbLogFile = path.join(logDir, 'db.log')
-const userLogFile = path.join(logDir, 'user.log')  // User log file
+const userLogFile = path.join(logDir, 'user.log') // User log file
 
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir)
